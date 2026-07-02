@@ -2,7 +2,7 @@
 <html lang="en">
 <head>
 <meta charset="UTF-8">
-<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover, maximum-scale=1.0, user-scalable=no">
 <title>Bahia Palace — Audio Guide</title>
 <link rel="manifest" href="manifest.json">
 <meta name="theme-color" content="#BD5B34">
@@ -22,31 +22,27 @@
     --white:#FFFDF8;
   }
   *{box-sizing:border-box;}
-  body{
-    margin:0;
-    background:
-      radial-gradient(ellipse at top, #FBF7EE 0%, var(--plaster-deep) 70%);
-    font-family:'Work Sans', sans-serif;
-    color:var(--ink);
-    display:flex;
-    justify-content:center;
-    padding:32px 16px 60px;
-    min-height:100vh;
-  }
+  body{ margin:0; padding:0; background:var(--white); font-family:'Work Sans', sans-serif; color:var(--ink); -webkit-font-smoothing:antialiased; }
+  html,body{ height:100%; }
   .device{
-    width:390px;
-    max-width:100%;
+    width:100%;
+    max-width:520px;
+    margin:0 auto;
+    min-height:100dvh;
     background:var(--white);
-    border-radius:36px;
-    box-shadow:0 30px 60px -20px rgba(30,20,10,0.35), 0 0 0 10px #1a1512;
-    overflow:hidden;
     position:relative;
+    display:flex;
+    flex-direction:column;
+    box-shadow:none;
+    border-radius:0;
+    overflow:hidden;
   }
   /* ---------- HEADER ---------- */
   .header{
     background:
       linear-gradient(180deg, var(--terracotta) 0%, var(--terracotta-deep) 100%);
     padding:22px 20px 26px;
+    padding-top: calc(22px + env(safe-area-inset-top));
     position:relative;
     overflow:hidden;
     color:var(--white);
@@ -166,9 +162,8 @@
 
   /* ---------- STOP LIST ---------- */
   .list{
-    padding:6px 18px 18px;
+    padding:6px 18px 40px;
     display:flex; flex-direction:column; gap:8px;
-    max-height:190px; overflow-y:auto;
   }
   .stop-row{
     display:flex; align-items:center; gap:10px;
@@ -193,18 +188,21 @@
 
   /* ---------- PLAYER SHEET ---------- */
   .sheet-backdrop{
-    position:absolute; inset:0; background:rgba(20,14,8,0.45);
+    position:fixed; inset:0; background:rgba(20,14,8,0.45);
     opacity:0; pointer-events:none; transition:.25s ease;
   }
   .sheet-backdrop.open{ opacity:1; pointer-events:auto; }
 
   .sheet{
-    position:absolute; left:0; right:0; bottom:0;
+    position:fixed; left:0; right:0; bottom:0;
+    max-width:520px;
+    margin:0 auto;
     background:var(--white);
     border-radius:26px 26px 0 0;
     transform:translateY(100%);
     transition:.32s cubic-bezier(.2,.9,.25,1);
     padding:10px 22px 26px;
+    padding-bottom: calc(26px + env(safe-area-inset-bottom));
     box-shadow:0 -10px 40px rgba(0,0,0,.25);
   }
   .sheet.open{ transform:translateY(0); }
@@ -269,7 +267,7 @@
 
   /* ---------- SPLASH ---------- */
   .splash{
-    position:absolute; inset:0; z-index:50;
+    position:fixed; inset:0; z-index:50;
     background: radial-gradient(140% 100% at 50% -10%, #D97A4E 0%, var(--terracotta) 40%, var(--terracotta-deep) 75%, #6E2C15 100%);
     display:flex; align-items:center; justify-content:center;
     overflow:hidden;
