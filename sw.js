@@ -12,7 +12,7 @@
 // You do not need to touch this file's logic — just make sure the file
 // lists below match whatever files you actually upload.
 
-const CACHE_NAME = "bahia-audio-guide-v1";
+const CACHE_NAME = "bahia-audio-guide-v2";
 
 const APP_SHELL = [
   "./",
@@ -28,7 +28,7 @@ const STOP_IDS = [
   "08-map","09-grand-riad","10-fountain","11-harem","12-grand-courtyard",
   "13-ceiling","14-ba-ahmed","exit"
 ];
-const LANGS = ["en","fr","es","de"];
+const LANGS = ["en","fr","es","de","it"];
 const VOICES = ["female","male"];
 
 const AUDIO_FILES = [];
