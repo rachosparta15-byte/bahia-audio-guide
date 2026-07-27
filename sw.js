@@ -12,7 +12,7 @@
 // You do not need to touch this file's logic — just make sure the file
 // lists below match whatever files you actually upload.
 
-const CACHE_NAME = "bahia-audio-guide-v2";
+const CACHE_NAME = "bahia-audio-guide-v3";
 
 const APP_SHELL = [
   "./",
@@ -71,11 +71,31 @@ self.addEventListener("activate", (event) => {
   );
 });
 
-// --- FETCH: serve from cache first, only hit network if not cached ---
+// --- FETCH ---
+// App shell (page + json): NETWORK-FIRST so updates always show, with the
+// cached copy as an offline fallback.
+// Audio (heavy, never changes): CACHE-FIRST so it plays instantly offline
+// inside the palace with zero network.
 self.addEventListener("fetch", (event) => {
+  const req = event.request;
+  const url = new URL(req.url);
+  const isAudio = url.pathname.includes("/audio_");
+
+  if (isAudio) {
+    event.respondWith(
+      caches.match(req).then((cached) => cached || fetch(req))
+    );
+    return;
+  }
+
+  // network-first for everything else (html, json, manifest)
   event.respondWith(
-    caches.match(event.request).then((cached) => {
-      return cached || fetch(event.request);
-    })
+    fetch(req)
+      .then((res) => {
+        const copy = res.clone();
+        caches.open(CACHE_NAME).then((cache) => cache.put(req, copy));
+        return res;
+      })
+      .catch(() => caches.match(req))
   );
 });
