@@ -436,9 +436,149 @@
   .splash-btn:hover svg{ transform:translateX(3px); }
   .splash-foot{ margin-top:16px; font-size:10.5px; letter-spacing:.04em; color:rgba(255,255,255,0.55); animation-delay:.96s; }
   @keyframes riseIn{ to{ opacity:1; transform:translateY(0); } }
+
+  /* ---------- ACCESS GATE ----------
+     Sits ABOVE the splash (z-index 60 vs 50). Nothing behind it downloads:
+     the service worker is not registered until the gate opens, so a visitor
+     without a valid link never pulls the 47MB of audio they did not buy. */
+  .gate-screen{
+    position:fixed; inset:0; z-index:60;
+    background: radial-gradient(140% 100% at 50% -10%, #D97A4E 0%, var(--terracotta) 40%, var(--terracotta-deep) 75%, #6E2C15 100%);
+    display:flex; align-items:center; justify-content:center;
+    overflow-y:auto;
+    transition:opacity .4s ease, visibility .4s ease;
+  }
+  .gate-screen.hidden{ opacity:0; visibility:hidden; pointer-events:none; }
+  .gate-inner{
+    position:relative; z-index:2;
+    width:100%; max-width:420px;
+    padding:36px 28px;
+    text-align:center;
+    color:#FBF3E4;
+  }
+  .gate-lock{
+    width:56px; height:56px; margin:0 auto 20px;
+    display:flex; align-items:center; justify-content:center;
+    border:1px solid rgba(251,243,228,0.45); border-radius:50%;
+    background:rgba(255,255,255,0.08);
+  }
+  .gate-title{
+    font-family:'Fraunces', serif; font-weight:600; font-size:23px;
+    margin:0 0 10px; line-height:1.25;
+  }
+  .gate-lead{
+    font-size:13.5px; line-height:1.6; color:rgba(255,255,255,0.85); margin:0 0 22px;
+  }
+  .gate-btn{
+    display:inline-flex; align-items:center; justify-content:center; gap:8px;
+    width:100%;
+    background:#FBF3E4; color:var(--terracotta-deep);
+    border:none; font-family:'Work Sans'; font-weight:700; font-size:14px;
+    padding:14px 24px; border-radius:999px; cursor:pointer;
+    box-shadow:0 12px 26px rgba(0,0,0,.28);
+    text-decoration:none;
+  }
+  .gate-btn:active{ transform:scale(.975); }
+  .gate-btn.secondary{
+    background:transparent; color:#FBF3E4;
+    border:1px solid rgba(251,243,228,0.45); box-shadow:none; font-weight:600;
+    margin-top:10px;
+  }
+  .gate-paste{
+    margin-top:24px; padding-top:20px;
+    border-top:1px solid rgba(251,243,228,0.18);
+  }
+  .gate-paste label{
+    display:block; font-size:11px; letter-spacing:.1em; text-transform:uppercase;
+    font-weight:600; color:rgba(255,255,255,0.62); margin-bottom:9px;
+  }
+  .gate-paste input{
+    width:100%; box-sizing:border-box;
+    background:rgba(0,0,0,0.22); border:1px solid rgba(251,243,228,0.32);
+    border-radius:12px; padding:12px 14px;
+    color:#FBF3E4; font-family:'Work Sans'; font-size:13px;
+  }
+  .gate-paste input::placeholder{ color:rgba(255,255,255,0.4); }
+  .gate-paste input:focus{ outline:none; border-color:#FBF3E4; }
+  .gate-err{
+    margin:0 0 18px; padding:12px 14px;
+    background:rgba(0,0,0,0.26); border:1px solid rgba(251,243,228,0.28);
+    border-radius:12px; font-size:12.5px; line-height:1.55;
+    color:#FFE9D2; text-align:left;
+  }
+  .gate-spinner{
+    width:30px; height:30px; margin:0 auto 18px;
+    border:2.5px solid rgba(251,243,228,0.28); border-top-color:#FBF3E4;
+    border-radius:50%; animation:gateSpin .9s linear infinite;
+  }
+  @keyframes gateSpin{ to{ transform:rotate(360deg); } }
+  .gate-langs{
+    display:flex; gap:6px; justify-content:center; margin-bottom:26px; flex-wrap:wrap;
+  }
+  .gate-lang{
+    border:1px solid rgba(255,255,255,0.4); background:rgba(255,255,255,0.1);
+    color:#FBF3E4; font-family:'Work Sans'; font-weight:600; font-size:11px;
+    padding:5px 11px; border-radius:999px; cursor:pointer;
+  }
+  .gate-lang.active{ background:#FBF3E4; color:var(--terracotta-deep); border-color:#FBF3E4; }
+  .gate-foot{
+    margin-top:22px; font-size:11px; line-height:1.6; color:rgba(255,255,255,0.55);
+  }
+
+  /* ---------- DOWNLOAD PROGRESS ----------
+     Post-gate the 47MB pull is the first thing a paying customer experiences.
+     Silent, it reads as "I paid and nothing happened". */
+  .dl-wrap{ width:100%; max-width:280px; margin:22px auto 0; }
+  .dl-bar{
+    height:5px; border-radius:99px; background:rgba(255,255,255,0.22); overflow:hidden;
+  }
+  .dl-fill{
+    height:100%; width:0%; border-radius:99px; background:#FBF3E4;
+    transition:width .35s ease;
+  }
+  .dl-text{
+    margin-top:9px; font-size:11px; letter-spacing:.03em;
+    color:rgba(255,255,255,0.75); line-height:1.5;
+  }
+  /* Slim persistent chip once the visitor is inside the guide. */
+  .dl-chip{
+    display:none; align-items:center; gap:8px;
+    margin-top:12px; padding:7px 12px;
+    background:rgba(255,255,255,0.14); border:1px solid rgba(255,255,255,0.28);
+    border-radius:999px; font-size:11px; color:var(--white); position:relative;
+  }
+  .dl-chip.show{ display:inline-flex; }
+  .dl-chip .dl-bar{ width:74px; height:4px; background:rgba(255,255,255,0.3); }
+
+  /* "Add to Home Screen" nudge — installed PWAs are exempt from the iOS
+     7-day storage eviction that otherwise deletes the downloaded audio. */
+  .a2hs{
+    display:none;
+    margin:14px 18px 0; padding:12px 14px;
+    background:var(--plaster); border:1px solid var(--line);
+    border-radius:14px; font-size:12px; line-height:1.55; color:#5b5140;
+    position:relative;
+  }
+  .a2hs.show{ display:block; }
+  .a2hs strong{ color:var(--ink); }
+  .a2hs button{
+    position:absolute; top:6px; right:8px;
+    background:none; border:none; color:#9C8F72; font-size:16px;
+    cursor:pointer; line-height:1; padding:4px;
+  }
 </style>
 </head>
 <body>
+
+<!-- ACCESS GATE — rendered above everything and populated entirely from JS,
+     so the copy can follow the visitor's language before they have chosen one.
+     Starts visible: the guide must never flash its contents to someone who
+     has not unlocked it. -->
+<div class="gate-screen" id="gate">
+  <div class="splash-vignette"></div>
+  <div class="splash-pattern"></div>
+  <div class="gate-inner" id="gateInner"></div>
+</div>
 
 <div class="splash" id="splash">
   <div class="splash-vignette"></div>
@@ -473,6 +613,14 @@
       <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round"><path d="M5 12h14M13 6l6 6-6 6"/></svg>
     </button>
     <div class="splash-foot">17 stops · 5 languages · works fully offline</div>
+
+    <!-- Download progress. Starts hidden and is revealed by the service
+         worker's first AUDIO_PROGRESS message, so a returning visitor whose
+         audio is already cached never sees a bar at all. -->
+    <div class="dl-wrap" id="dlWrap" style="display:none">
+      <div class="dl-bar"><div class="dl-fill" id="dlFill"></div></div>
+      <div class="dl-text" id="dlText"></div>
+    </div>
   </div>
 </div>
 
@@ -494,6 +642,19 @@
       <button class="voice-btn active" data-voice="female">♀ Woman</button>
       <button class="voice-btn" data-voice="male">♂ Man</button>
     </div>
+
+    <!-- Download still running after the visitor moved past the splash. -->
+    <div class="dl-chip" id="dlChip">
+      <div class="dl-bar"><div class="dl-fill" id="dlChipFill"></div></div>
+      <span id="dlChipText"></span>
+    </div>
+  </div>
+
+  <!-- Shown once the audio is safely on the device: the one action that
+       stops iOS deleting it again a week later. -->
+  <div class="a2hs" id="a2hs">
+    <button type="button" id="a2hsClose" aria-label="Dismiss">×</button>
+    <span id="a2hsText"></span>
   </div>
 
   <div class="map-wrap">
@@ -683,9 +844,10 @@
 </div>
 
 <script>
-// ---- Stop data (titles + short teaser). Full narration text lives in
-// guide_content.json — this mockup shows a short teaser per stop, and
-// wires up real playback if the matching mp3 exists next to this file
+// ---- Stop data (titles + short teaser). The full narration text lives in
+// guide_content.json, which is the master copy the mp3s are generated from
+// and is NOT deployed — see .vercelignore. Nothing here fetches it; these
+// teasers are self-contained, and playback uses the mp3 next to this file
 // at: audio_female/<lang>/<stop-id>.mp3
 const STOPS = [
   {id:"00-gate", num:"00", dur:"1:10", title:{en:"The Gate",fr:"La Porte",es:"La Puerta",de:"Das Tor",it:"La Porta"},
@@ -877,18 +1039,415 @@ document.getElementById('voiceRow').addEventListener('click', (e)=>{
 
 render();
 
-// --- OFFLINE SETUP: register the service worker so all audio gets
-// downloaded once, then works with zero internet inside the palace.
-// NOTE: this only activates when the page is served over http(s) from
-// a real server — browsers block service workers on file:// previews,
-// which is expected while testing locally by double-clicking the file. ---
-if ('serviceWorker' in navigator) {
-  window.addEventListener('load', () => {
-    navigator.serviceWorker.register('sw.js')
-      .then(reg => console.log('Offline mode ready ✓', reg))
-      .catch(err => console.warn('Service worker inactive (normal in local file:// preview).', err));
-  });
+/* =====================================================================
+   ACCESS GATE
+   =====================================================================
+   The guide is the paid half of the Visitor Pack. Until this gate opens,
+   nothing downloads: the service worker is not registered, so a visitor
+   who simply found the URL never pulls the 47MB they did not buy.
+
+   ONE ONLINE MOMENT, THEN NEVER AGAIN. The first open with a token calls
+   the main site once to redeem it. After that the activation lives in
+   localStorage and every later open is decided locally, with no network —
+   which is what keeps "works fully offline" true.
+
+   REVERSIBLE: set GATE_ENABLED to false and redeploy to return the guide
+   to its previous, completely open behaviour. Nothing else needs undoing.
+   ===================================================================== */
+
+const GATE_ENABLED  = true;
+const SITE_ORIGIN   = 'https://visitbahiapalace.com';
+const REDEEM_URL    = SITE_ORIGIN + '/api/guide/redeem';
+const LS_ACTIVATION = 'bahia.guide.activation.v1';
+const LS_DEVICE     = 'bahia.guide.device.v1';
+
+const GATE_I18N = {
+  en: {
+    title:"This guide is part of the Visitor Pack",
+    lead:"Open the link from your confirmation email to unlock it on this phone. After that it works offline, with no signal, anywhere in the palace.",
+    buy:"Get the Visitor Pack",
+    pasteLabel:"Already bought? Paste your access link",
+    unlock:"Unlock",
+    activating:"Unlocking your guide…",
+    foot:"17 stops · 5 languages · works fully offline",
+    e_invalid:"That link isn't valid. Copy the whole link from your confirmation email — it's long, and the end is easy to miss.",
+    e_expired:"This access link has expired. Contact us with your booking reference and we'll send a new one.",
+    e_limit:"This link has already been used on the maximum number of devices. If that wasn't you, contact us with your booking reference.",
+    e_revoked:"This booking was cancelled, so the guide is no longer available.",
+    e_notfound:"We couldn't find that booking. Check the link came from your confirmation email.",
+    e_notpaid:"This booking isn't confirmed as paid yet. If you've just paid, wait a moment and try again.",
+    e_offline:"You're offline. The guide needs internet just once, to unlock. Connect to wifi and try again — after that it works with no signal at all.",
+    e_server:"We couldn't reach our server. Please try again in a moment.",
+    dl:"Downloading your guide",
+    dlKeep:"Keep this page open. About 47 MB.",
+    dlDone:"Ready. You can go offline now.",
+    dlFailed:"Some tracks didn't download. Reconnect and reopen the guide to finish.",
+    a2hs:"Your guide is saved on this phone. To keep it, tap Share and then <strong>Add to Home Screen</strong> — otherwise your phone may clear it after about a week."
+  },
+  fr: {
+    title:"Ce guide fait partie du Pack Visiteur",
+    lead:"Ouvrez le lien de votre e-mail de confirmation pour le déverrouiller sur ce téléphone. Ensuite il fonctionne hors ligne, sans réseau, partout dans le palais.",
+    buy:"Obtenir le Pack Visiteur",
+    pasteLabel:"Déjà acheté ? Collez votre lien d'accès",
+    unlock:"Déverrouiller",
+    activating:"Déverrouillage de votre guide…",
+    foot:"17 étapes · 5 langues · fonctionne hors ligne",
+    e_invalid:"Ce lien n'est pas valide. Copiez le lien entier depuis votre e-mail de confirmation — il est long, et la fin est vite oubliée.",
+    e_expired:"Ce lien d'accès a expiré. Contactez-nous avec votre référence de réservation et nous vous en enverrons un nouveau.",
+    e_limit:"Ce lien a déjà été utilisé sur le nombre maximal d'appareils. Si ce n'était pas vous, contactez-nous avec votre référence de réservation.",
+    e_revoked:"Cette réservation a été annulée : le guide n'est plus disponible.",
+    e_notfound:"Réservation introuvable. Vérifiez que le lien provient bien de votre e-mail de confirmation.",
+    e_notpaid:"Cette réservation n'est pas encore confirmée comme payée. Si vous venez de payer, patientez un instant puis réessayez.",
+    e_offline:"Vous êtes hors ligne. Le guide a besoin d'Internet une seule fois, pour se déverrouiller. Connectez-vous au wifi et réessayez — ensuite il fonctionne sans aucun réseau.",
+    e_server:"Impossible de joindre notre serveur. Réessayez dans un instant.",
+    dl:"Téléchargement de votre guide",
+    dlKeep:"Gardez cette page ouverte. Environ 47 Mo.",
+    dlDone:"Prêt. Vous pouvez passer hors ligne.",
+    dlFailed:"Certaines pistes n'ont pas été téléchargées. Reconnectez-vous et rouvrez le guide pour terminer.",
+    a2hs:"Votre guide est enregistré sur ce téléphone. Pour le conserver, appuyez sur Partager puis <strong>Sur l'écran d'accueil</strong> — sinon votre téléphone risque de l'effacer au bout d'une semaine environ."
+  },
+  es: {
+    title:"Esta guía forma parte del Pack del Visitante",
+    lead:"Abra el enlace de su correo de confirmación para desbloquearla en este teléfono. Después funciona sin conexión, sin cobertura, en todo el palacio.",
+    buy:"Conseguir el Pack del Visitante",
+    pasteLabel:"¿Ya lo compró? Pegue su enlace de acceso",
+    unlock:"Desbloquear",
+    activating:"Desbloqueando su guía…",
+    foot:"17 paradas · 5 idiomas · funciona sin conexión",
+    e_invalid:"Ese enlace no es válido. Copie el enlace completo de su correo de confirmación: es largo y es fácil dejarse el final.",
+    e_expired:"Este enlace de acceso ha caducado. Escríbanos con su referencia de reserva y le enviaremos uno nuevo.",
+    e_limit:"Este enlace ya se ha usado en el número máximo de dispositivos. Si no ha sido usted, escríbanos con su referencia de reserva.",
+    e_revoked:"Esta reserva fue cancelada, así que la guía ya no está disponible.",
+    e_notfound:"No encontramos esa reserva. Compruebe que el enlace viene de su correo de confirmación.",
+    e_notpaid:"Esta reserva aún no consta como pagada. Si acaba de pagar, espere un momento e inténtelo de nuevo.",
+    e_offline:"Está sin conexión. La guía necesita internet una sola vez, para desbloquearse. Conéctese al wifi e inténtelo de nuevo; después funciona sin cobertura alguna.",
+    e_server:"No pudimos contactar con nuestro servidor. Inténtelo de nuevo en un momento.",
+    dl:"Descargando su guía",
+    dlKeep:"Mantenga esta página abierta. Unos 47 MB.",
+    dlDone:"Lista. Ya puede quedarse sin conexión.",
+    dlFailed:"Algunas pistas no se descargaron. Vuelva a conectarse y reabra la guía para terminar.",
+    a2hs:"Su guía está guardada en este teléfono. Para conservarla, pulse Compartir y luego <strong>Añadir a pantalla de inicio</strong>; si no, su teléfono podría borrarla al cabo de una semana."
+  },
+  de: {
+    title:"Dieser Guide gehört zum Visitor Pack",
+    lead:"Öffnen Sie den Link aus Ihrer Bestätigungs-E-Mail, um ihn auf diesem Handy freizuschalten. Danach funktioniert er offline, ohne Empfang, überall im Palast.",
+    buy:"Visitor Pack kaufen",
+    pasteLabel:"Schon gekauft? Zugangslink einfügen",
+    unlock:"Freischalten",
+    activating:"Ihr Guide wird freigeschaltet…",
+    foot:"17 Stationen · 5 Sprachen · funktioniert offline",
+    e_invalid:"Dieser Link ist ungültig. Kopieren Sie den vollständigen Link aus Ihrer Bestätigungs-E-Mail — er ist lang, und das Ende fehlt leicht.",
+    e_expired:"Dieser Zugangslink ist abgelaufen. Schreiben Sie uns mit Ihrer Buchungsreferenz, wir senden Ihnen einen neuen.",
+    e_limit:"Dieser Link wurde bereits auf der maximalen Anzahl Geräte verwendet. Falls das nicht Sie waren, melden Sie sich mit Ihrer Buchungsreferenz.",
+    e_revoked:"Diese Buchung wurde storniert, der Guide steht nicht mehr zur Verfügung.",
+    e_notfound:"Diese Buchung konnten wir nicht finden. Prüfen Sie, ob der Link aus Ihrer Bestätigungs-E-Mail stammt.",
+    e_notpaid:"Diese Buchung ist noch nicht als bezahlt bestätigt. Wenn Sie gerade bezahlt haben, warten Sie einen Moment und versuchen Sie es erneut.",
+    e_offline:"Sie sind offline. Der Guide braucht genau einmal Internet, zum Freischalten. Verbinden Sie sich mit dem WLAN und versuchen Sie es erneut — danach läuft er ganz ohne Empfang.",
+    e_server:"Wir konnten unseren Server nicht erreichen. Bitte versuchen Sie es gleich noch einmal.",
+    dl:"Ihr Guide wird heruntergeladen",
+    dlKeep:"Lassen Sie diese Seite geöffnet. Etwa 47 MB.",
+    dlDone:"Fertig. Sie können jetzt offline gehen.",
+    dlFailed:"Einige Titel wurden nicht geladen. Verbinden Sie sich erneut und öffnen Sie den Guide noch einmal.",
+    a2hs:"Ihr Guide ist auf diesem Handy gespeichert. Um ihn zu behalten, tippen Sie auf Teilen und dann <strong>Zum Home-Bildschirm</strong> — sonst löscht Ihr Handy ihn nach etwa einer Woche."
+  },
+  it: {
+    title:"Questa guida fa parte del Visitor Pack",
+    lead:"Apri il link della tua email di conferma per sbloccarla su questo telefono. Dopo funziona offline, senza campo, in tutto il palazzo.",
+    buy:"Acquista il Visitor Pack",
+    pasteLabel:"Già acquistato? Incolla il tuo link di accesso",
+    unlock:"Sblocca",
+    activating:"Sblocco della guida in corso…",
+    foot:"17 tappe · 5 lingue · funziona offline",
+    e_invalid:"Questo link non è valido. Copia il link per intero dalla tua email di conferma: è lungo, ed è facile perderne la fine.",
+    e_expired:"Questo link di accesso è scaduto. Scrivici indicando il riferimento della prenotazione e te ne invieremo uno nuovo.",
+    e_limit:"Questo link è già stato usato sul numero massimo di dispositivi. Se non sei stato tu, scrivici con il riferimento della prenotazione.",
+    e_revoked:"Questa prenotazione è stata annullata, quindi la guida non è più disponibile.",
+    e_notfound:"Non troviamo questa prenotazione. Controlla che il link provenga dalla tua email di conferma.",
+    e_notpaid:"Questa prenotazione non risulta ancora pagata. Se hai appena pagato, attendi un momento e riprova.",
+    e_offline:"Sei offline. La guida ha bisogno di internet una sola volta, per sbloccarsi. Collegati al wifi e riprova: dopo funziona senza alcun campo.",
+    e_server:"Non siamo riusciti a raggiungere il nostro server. Riprova tra un momento.",
+    dl:"Download della guida",
+    dlKeep:"Tieni aperta questa pagina. Circa 47 MB.",
+    dlDone:"Pronta. Ora puoi andare offline.",
+    dlFailed:"Alcune tracce non sono state scaricate. Riconnettiti e riapri la guida per completare.",
+    a2hs:"La tua guida è salvata su questo telefono. Per conservarla, tocca Condividi e poi <strong>Aggiungi a Home</strong> — altrimenti il telefono potrebbe cancellarla dopo circa una settimana."
+  }
+};
+
+/** The gate speaks before the visitor has chosen a language, so guess from the browser. */
+let gateLang = (() => {
+  const l = (navigator.language || 'en').slice(0, 2).toLowerCase();
+  return GATE_I18N[l] ? l : 'en';
+})();
+
+const G = () => GATE_I18N[gateLang];
+
+// localStorage throws outright in some private-browsing modes. Losing the
+// gate's memory is survivable (they redeem again); an exception here is not.
+function lsGet(k){ try{ return localStorage.getItem(k); }catch{ return null; } }
+function lsSet(k,v){ try{ localStorage.setItem(k,v); return true; }catch{ return false; } }
+
+/**
+ * A stable, meaningless id for this browser. Kept in its own key so that
+ * clearing the activation alone does not spend a second device slot.
+ */
+function deviceId(){
+  let id = lsGet(LS_DEVICE);
+  if (id) return id;
+  id = (crypto && crypto.randomUUID)
+    ? crypto.randomUUID()
+    : 'd-' + Math.random().toString(36).slice(2) + Date.now().toString(36);
+  lsSet(LS_DEVICE, id);
+  return id;
 }
+
+function loadActivation(){
+  try{
+    const raw = lsGet(LS_ACTIVATION);
+    if(!raw) return null;
+    const rec = JSON.parse(raw);
+    if(!rec || rec.v !== 1) return null;
+    // An activation past its expiry is treated as absent: the stored token is
+    // still there, so the next online open can quietly redeem again.
+    if(rec.expiresAt && Date.parse(rec.expiresAt) < Date.now()) return null;
+    return rec;
+  }catch{ return null; }
+}
+
+/** Accepts a bare token or a whole pasted URL — customers paste both. */
+function extractToken(input){
+  const s = (input || '').trim();
+  if(!s) return null;
+  const m = s.match(/[?&]k=([A-Za-z0-9_.\-]+)/);
+  if(m) return m[1];
+  return /^[A-Za-z0-9_-]+\.[A-Za-z0-9_-]+$/.test(s) ? s : null;
+}
+
+/** Drop the token from the address bar so it is not shared by screenshot or history. */
+function cleanUrl(){
+  try{
+    const u = new URL(location.href);
+    if(u.searchParams.has('k')){
+      u.searchParams.delete('k');
+      history.replaceState(null, '', u.pathname + (u.search || '') + u.hash);
+    }
+  }catch{}
+}
+
+// ─── gate rendering ────────────────────────────────────────────────────
+
+const gateEl = document.getElementById('gate');
+const gateInner = document.getElementById('gateInner');
+
+function langPicker(){
+  return '<div class="gate-langs">' +
+    Object.keys(GATE_I18N).map(l =>
+      `<button class="gate-lang${l===gateLang?' active':''}" data-glang="${l}">${l.toUpperCase()}</button>`
+    ).join('') + '</div>';
+}
+
+function showActivating(){
+  gateInner.innerHTML =
+    `<div class="gate-spinner"></div>
+     <p class="gate-lead" style="margin:0">${G().activating}</p>`;
+}
+
+/** Remembered so switching language re-renders the SAME error, not a generic one. */
+let lastGateError = null;
+
+function showLocked(errorKey){
+  lastGateError = errorKey || null;
+  const t = G();
+  gateInner.innerHTML =
+    langPicker() +
+    `<div class="gate-lock">
+       <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="#FBF3E4" stroke-width="1.8" stroke-linecap="round">
+         <rect x="4" y="10.5" width="16" height="10.5" rx="2.5"/>
+         <path d="M8 10.5V7.5a4 4 0 0 1 8 0v3"/>
+       </svg>
+     </div>
+     <h1 class="gate-title">${t.title}</h1>` +
+    (errorKey ? `<p class="gate-err">${t[errorKey]}</p>` : '') +
+    `<p class="gate-lead">${t.lead}</p>
+     <a class="gate-btn" href="${SITE_ORIGIN}/${gateLang}/visitor-pack">${t.buy}</a>
+     <div class="gate-paste">
+       <label for="gateInput">${t.pasteLabel}</label>
+       <input id="gateInput" type="text" inputmode="url" autocomplete="off"
+              autocapitalize="off" spellcheck="false"
+              placeholder="https://guide.visitbahiapalace.com/?k=…">
+       <button class="gate-btn secondary" id="gateUnlock">${t.unlock}</button>
+     </div>
+     <p class="gate-foot">${t.foot}</p>`;
+
+  document.getElementById('gateUnlock').onclick = () => {
+    const tok = extractToken(document.getElementById('gateInput').value);
+    if(!tok){ showLocked('e_invalid'); return; }
+    attemptRedeem(tok);
+  };
+}
+
+// Language switching on the gate. Delegated, because the gate's markup is
+// rebuilt on every state change.
+gateInner.addEventListener('click', (e) => {
+  const btn = e.target.closest('[data-glang]');
+  if(!btn) return;
+  gateLang = btn.dataset.glang;
+  showLocked(lastGateError);
+});
+
+// ─── redemption ────────────────────────────────────────────────────────
+
+const ERROR_COPY = {
+  invalid_token:'e_invalid', expired:'e_expired', device_limit:'e_limit',
+  revoked:'e_revoked', not_found:'e_notfound', not_paid:'e_notpaid',
+  offline:'e_offline', bad_request:'e_invalid',
+  not_configured:'e_server', server_error:'e_server', network:'e_server'
+};
+
+async function attemptRedeem(token){
+  showActivating();
+
+  if(!navigator.onLine){ showLocked('e_offline'); return; }
+
+  let data;
+  try{
+    const res = await fetch(REDEEM_URL, {
+      method:'POST',
+      headers:{ 'Content-Type':'application/json' },
+      body: JSON.stringify({ token, deviceId: deviceId() })
+    });
+    data = await res.json();
+  }catch{
+    showLocked('e_server');
+    return;
+  }
+
+  if(!data || !data.ok){
+    showLocked(ERROR_COPY[data && data.error] || 'e_server');
+    return;
+  }
+
+  // Keep the token: if the activation later expires, or the visitor comes
+  // back after a long gap, this is what lets the guide re-redeem silently
+  // instead of asking them to dig out the email again.
+  lsSet(LS_ACTIVATION, JSON.stringify({
+    v:1,
+    ref: data.reference,
+    expiresAt: data.expiresAt,
+    token,
+    savedAt: new Date().toISOString()
+  }));
+
+  cleanUrl();
+  openGate();
+}
+
+// ─── opening ───────────────────────────────────────────────────────────
+
+function openGate(){
+  gateEl.classList.add('hidden');
+  // The visitor's gate language is almost certainly the one they want to
+  // listen in, so carry it through rather than starting them on English.
+  if(GATE_I18N[gateLang] && gateLang !== currentLang){
+    currentLang = gateLang;
+    document.querySelectorAll('.lang-btn').forEach(b =>
+      b.classList.toggle('active', b.dataset.lang === currentLang));
+    render();
+  }
+  startOffline();
+}
+
+async function bootGate(){
+  if(!GATE_ENABLED){ gateEl.classList.add('hidden'); startOffline(); return; }
+
+  const token = new URLSearchParams(location.search).get('k');
+  const stored = loadActivation();
+
+  // Already unlocked on this device: straight in, no network touched. This
+  // is the path every visit after the first takes, and inside the palace it
+  // is the only one that could possibly work.
+  if(stored){ cleanUrl(); openGate(); return; }
+
+  if(token){ attemptRedeem(token); return; }
+
+  // No activation, no token — but perhaps an expired activation whose token
+  // we kept. Worth one silent attempt before showing a locked door.
+  try{
+    const raw = JSON.parse(lsGet(LS_ACTIVATION) || 'null');
+    if(raw && raw.token && navigator.onLine){ attemptRedeem(raw.token); return; }
+  }catch{}
+
+  showLocked(null);
+}
+
+/* =====================================================================
+   OFFLINE SETUP + DOWNLOAD PROGRESS
+   =====================================================================
+   Registered only from openGate(), never on page load. NOTE: service
+   workers need http(s) — browsers block them on file:// previews, which is
+   expected when testing locally by double-clicking the file.
+   ===================================================================== */
+
+const dlWrap = document.getElementById('dlWrap');
+const dlFill = document.getElementById('dlFill');
+const dlText = document.getElementById('dlText');
+const dlChip = document.getElementById('dlChip');
+const dlChipFill = document.getElementById('dlChipFill');
+const dlChipText = document.getElementById('dlChipText');
+const a2hsEl = document.getElementById('a2hs');
+
+function setProgress(pct, label){
+  dlWrap.style.display = 'block';
+  dlFill.style.width = pct + '%';
+  dlText.textContent = label;
+  dlChip.classList.add('show');
+  dlChipFill.style.width = pct + '%';
+  dlChipText.textContent = pct + '%';
+}
+
+function finishProgress(label){
+  dlFill.style.width = '100%';
+  dlText.textContent = label;
+  dlChip.classList.remove('show');
+}
+
+function showA2HS(){
+  // Only worth asking when it can still be acted on — an already-installed
+  // PWA is exactly the case that does not need the advice.
+  const installed = window.matchMedia('(display-mode: standalone)').matches || window.navigator.standalone;
+  if(installed) return;
+  document.getElementById('a2hsText').innerHTML = G().a2hs;
+  a2hsEl.classList.add('show');
+}
+document.getElementById('a2hsClose').onclick = () => a2hsEl.classList.remove('show');
+
+function onSwMessage(event){
+  const m = event.data || {};
+  if(m.type === 'AUDIO_PROGRESS'){
+    const pct = Math.round((m.done / m.total) * 100);
+    setProgress(pct, `${G().dl} — ${pct}% · ${G().dlKeep}`);
+  } else if(m.type === 'AUDIO_DONE'){
+    finishProgress(m.failed > 0 ? G().dlFailed : G().dlDone);
+    if(!m.failed) showA2HS();
+  } else if(m.type === 'AUDIO_ERROR'){
+    finishProgress(G().dlFailed);
+  }
+}
+
+async function startOffline(){
+  if(!('serviceWorker' in navigator)) return;
+  try{
+    navigator.serviceWorker.addEventListener('message', onSwMessage);
+    await navigator.serviceWorker.register('sw.js');
+    const reg = await navigator.serviceWorker.ready;
+    const worker = reg.active || navigator.serviceWorker.controller;
+    if(worker) worker.postMessage({ type:'CACHE_AUDIO', lang: currentLang });
+  }catch(err){
+    console.warn('Service worker inactive (normal in local file:// preview).', err);
+  }
+}
+
+bootGate();
 </script>
 </body>
 </html>
