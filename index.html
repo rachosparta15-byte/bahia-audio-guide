@@ -1207,8 +1207,10 @@ function loadActivation(){
     if(!raw) return null;
     const rec = JSON.parse(raw);
     if(!rec || rec.v !== 1) return null;
-    // An activation past its expiry is treated as absent: the stored token is
-    // still there, so the next online open can quietly redeem again.
+    // Kept for activations written by the previous token-based build, which
+    // stored an expiry. Codes do not expire, so new records carry none and this
+    // is a no-op for them; an old record past its date still falls through to a
+    // silent re-redeem rather than locking somebody out.
     if(rec.expiresAt && Date.parse(rec.expiresAt) < Date.now()) return null;
     return rec;
   }catch{ return null; }
@@ -1218,9 +1220,10 @@ function loadActivation(){
 function extractToken(input){
   const s = (input || '').trim();
   if(!s) return null;
-  const m = s.match(/[?&]k=([A-Za-z0-9_.\-]+)/);
+  const m = s.match(/[?&]k=([A-Za-z0-9-]+)/);
   if(m) return m[1];
-  return /^[A-Za-z0-9_-]+\.[A-Za-z0-9_-]+$/.test(s) ? s : null;
+  // A bare code: 16 base32 characters, with or without the display dashes.
+  return /^[0-9A-Za-z-]{16,19}$/.test(s) ? s : null;
 }
 
 /** Drop the token from the address bar so it is not shared by screenshot or history. */
@@ -1297,10 +1300,25 @@ gateInner.addEventListener('click', (e) => {
 
 // ─── redemption ────────────────────────────────────────────────────────
 
+/*
+ * The server's vocabulary changed with the move from signed tokens to codes.
+ *
+ * `unknown_code` replaces `invalid_token`, and `other_device` replaces
+ * `device_limit` — but they are not the same message and must not share copy.
+ * A budget being spent said "too many devices, wait or contact us". A code
+ * belonging to somebody else's phone is final, and the honest thing to say is
+ * that this link is already in use and each person has their own.
+ *
+ * `expired` and `not_configured` are gone from the server entirely: codes do
+ * not expire, and there is no shared secret left to misconfigure. They stay
+ * mapped so a stale deployment answering an old error still shows something
+ * sensible rather than falling through to "server error".
+ */
 const ERROR_COPY = {
-  invalid_token:'e_invalid', expired:'e_expired', device_limit:'e_limit',
+  unknown_code:'e_invalid', other_device:'e_limit',
   revoked:'e_revoked', not_found:'e_notfound', not_paid:'e_notpaid',
   offline:'e_offline', bad_request:'e_invalid',
+  invalid_token:'e_invalid', expired:'e_expired', device_limit:'e_limit',
   not_configured:'e_server', server_error:'e_server', network:'e_server'
 };
 
@@ -1314,7 +1332,7 @@ async function attemptRedeem(token){
     const res = await fetch(REDEEM_URL, {
       method:'POST',
       headers:{ 'Content-Type':'application/json' },
-      body: JSON.stringify({ token, deviceId: deviceId() })
+      body: JSON.stringify({ code: token, deviceId: deviceId() })
     });
     data = await res.json();
   }catch{
@@ -1330,10 +1348,16 @@ async function attemptRedeem(token){
   // Keep the token: if the activation later expires, or the visitor comes
   // back after a long gap, this is what lets the guide re-redeem silently
   // instead of asking them to dig out the email again.
+  /*
+   * Keep the code. If this device's storage is cleared and later restored, or
+   * the visitor returns after a long gap, this is what lets the guide redeem
+   * again silently instead of asking them to dig out the email — and because
+   * the code is bound to this device, redeeming again succeeds.
+   */
   lsSet(LS_ACTIVATION, JSON.stringify({
     v:1,
     ref: data.reference,
-    expiresAt: data.expiresAt,
+    seat: data.seat,
     token,
     savedAt: new Date().toISOString()
   }));
