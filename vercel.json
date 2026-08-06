@@ -1,0 +1,17 @@
+{
+  "$schema": "https://openapi.vercel.sh/vercel.json",
+  "routes": [
+    {
+      "src": "/guide_content\\.json",
+      "status": 404
+    },
+    {
+      "src": "/generate_audio_edge_tts\\.py",
+      "status": 404
+    },
+    {
+      "src": "/(.*)",
+      "dest": "/$1"
+    }
+  ]
+}
