@@ -1051,6 +1051,30 @@ render();
    localStorage and every later open is decided locally, with no network —
    which is what keeps "works fully offline" true.
 
+   WHAT THIS GATE DOES NOT DO, ON PURPOSE.
+
+   It protects the app, not the mp3s. The audio sits on Cloudflare Pages as
+   ordinary static files at predictable paths — /audio_female/en/01-avenue.mp3
+   and so on — and static hosting has no way to ask for a code before serving
+   one. Anyone who knows a path can fetch it, and any customer can read all
+   170 paths out of their own browser's network tab.
+
+   That was measured, not assumed, and then accepted as a business decision.
+   The realistic loss is a customer pasting their link into a review, and the
+   gate does stop exactly that: the link is per-seat and dies on the first
+   device that uses it. Someone willing to scrape 170 files was never going to
+   pay 13.99 EUR.
+
+   The alternative was a Worker issuing short-lived signed URLs. It would work,
+   and it would put an expiring credential between a visitor and their audio —
+   the one thing this product cannot afford, because the whole promise is that
+   it plays in a palace with no signal. Protecting the files better by making
+   them occasionally unplayable is a bad trade.
+
+   If that ever changes, the honest move is signed URLs with a long cache, not
+   hashed filenames. Renaming only defeats guessing, and guessing is not how
+   this would actually leak.
+
    REVERSIBLE: set GATE_ENABLED to false and redeploy to return the guide
    to its previous, completely open behaviour. Nothing else needs undoing.
    ===================================================================== */
