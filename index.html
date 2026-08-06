@@ -1056,7 +1056,18 @@ render();
    ===================================================================== */
 
 const GATE_ENABLED  = true;
-const SITE_ORIGIN   = 'https://visitbahiapalace.com';
+
+/* MUST be the www host, not the apex.
+ *
+ * The apex answers /api/guide/redeem with a 307 to www. Harmless for a browser
+ * following a link, fatal here: a CORS preflight that gets redirected FAILS —
+ * the spec forbids following it — so the POST is never sent and every customer
+ * is refused with a network error before the server sees anything.
+ *
+ * Verified against production: OPTIONS on the apex returns 307, OPTIONS on www
+ * returns 204 with the full set of Access-Control headers. If the site ever
+ * stops redirecting apex to www, this constant is what has to change. */
+const SITE_ORIGIN   = 'https://www.visitbahiapalace.com';
 const REDEEM_URL    = SITE_ORIGIN + '/api/guide/redeem';
 const LS_ACTIVATION = 'bahia.guide.activation.v1';
 const LS_DEVICE     = 'bahia.guide.device.v1';
