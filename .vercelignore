@@ -1,0 +1,30 @@
+# Files that live in this repo but must NOT be served from
+# guide.visitbahiapalace.com.
+#
+# This is a zero-config static deployment: by default Vercel publishes every
+# file in the repo root, at its own URL. That included the two files below.
+#
+#   guide_content.json  — the COMPLETE narration script, all 17 stops in all
+#                         five languages. It is the product. Nothing in the
+#                         page ever fetched it (index.html renders short
+#                         teasers from its own STOPS array), so it was 62KB
+#                         of paid content sitting at a guessable URL, free,
+#                         behind no gate at all.
+#
+#   generate_audio_edge_tts.py — the authoring tool. No secrets in it, but it
+#                         is not part of the product and there is no reason
+#                         to publish it.
+#
+# Both stay in git — guide_content.json is the master copy the audio is
+# generated from, and the script needs it in the same folder to run. They
+# are simply excluded from what gets uploaded.
+#
+# VERIFY AFTER DEPLOY. This file is the only thing standing between the
+# script and the open internet, so confirm it actually worked:
+#
+#   curl -s -o /dev/null -w "%{http_code}\n" https://guide.visitbahiapalace.com/guide_content.json
+#
+# Expect 404. Anything else means the exclusion did not take effect.
+
+guide_content.json
+generate_audio_edge_tts.py
